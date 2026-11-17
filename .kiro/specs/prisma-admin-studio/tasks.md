@@ -16,12 +16,12 @@
   - [x] 3.2 Build default config from a parsed schema (all models, sensible columns and form inputs)
   - _Requirements: 2_
 
-- [ ] 4. Generator core
-  - [ ] 4.1 Project skeleton template (layout, sidebar, Prisma setup, SQLite)
-  - [ ] 4.2 List page and table template
-  - [ ] 4.3 Create, edit, and detail page templates plus server actions
-  - [ ] 4.4 Seed script template
-  - [ ] 4.5 Packager (ZIP)
+- [x] 4. Generator core
+  - [x] 4.1 Project skeleton template (layout, sidebar, Prisma setup, SQLite)
+  - [x] 4.2 List page and table template
+  - [x] 4.3 Create, edit, and detail page templates plus server actions
+  - [x] 4.4 Seed script template
+  - [x] 4.5 Packager (ZIP)
   - _Requirements: 4_
 
 - [ ] 5. Roles and permissions
