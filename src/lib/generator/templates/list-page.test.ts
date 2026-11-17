@@ -78,12 +78,14 @@ describe("list page templates", () => {
     expect(page).not.toContain("showEdit");
   });
 
-  it("queries the right Prisma delegate and leaves a spot for permission checks", () => {
+  it("queries the right Prisma delegate and uses permissions to show buttons and links", () => {
     const page = file(generateProject(build()), "app/blog-post/page.tsx");
 
     expect(page).toContain("prisma.blogPost.findMany");
-    expect(page).toContain("const showCreate = true;");
-    expect(page).toContain("later: && can(");
+    expect(page).toContain('if (!can(role, "BlogPost", "view")) return <NotAllowed />;');
+    expect(page).toContain('const showCreate = can(role, "BlogPost", "create");');
+    expect(page).toContain('const showEdit = can(role, "BlogPost", "edit");');
+    expect(page).toContain('const showDetail = can(role, "BlogPost", "view");');
   });
 
   it("is deterministic and does not mutate the config", () => {

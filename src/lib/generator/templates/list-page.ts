@@ -156,8 +156,8 @@ ${links.join("\n")}
 
 /**
  * List page for one model (app/<slug>/page.tsx): a server component that
- * loads rows with Prisma and renders the table. Permission checks (can())
- * are added later: combine them with the `show*` flags below.
+ * loads rows with Prisma and renders the table. The active role decides
+ * which buttons and links are shown (the `show*` flags).
  */
 export const listPageTemplate = (
   model: SchemaModelEntry,
@@ -171,24 +171,31 @@ export const listPageTemplate = (
   const hasDetail = modelConfig.enabledPages.includes("detail") && !!idField;
   const hasEdit = modelConfig.enabledPages.includes("edit") && !!idField;
 
-  // Flags decide which links are visible. Permission checks will be ANDed here.
+  // Flags decide which buttons and links are visible, based on the active role.
   const flags: string[] = [];
-  if (hasCreate) flags.push("const showCreate = true; // later: && can(role, \"" + name + "\", \"create\")");
-  if (hasDetail) flags.push("const showDetail = true;");
-  if (hasEdit) flags.push("const showEdit = true; // later: && can(role, \"" + name + "\", \"edit\")");
+  if (hasCreate) flags.push(`const showCreate = can(role, "${name}", "create");`);
+  if (hasDetail) flags.push(`const showDetail = can(role, "${name}", "view");`);
+  if (hasEdit) flags.push(`const showEdit = can(role, "${name}", "edit");`);
 
   const tableProps = ["rows={rows}"];
   if (hasDetail) tableProps.push("showDetail={showDetail}");
   if (hasEdit) tableProps.push("showEdit={showEdit}");
 
-  return `${hasCreate ? `import Link from "next/link";\n\n` : ""}import { ${name}Table } from "@/components/${slug}-table";
+  return `${hasCreate ? `import Link from "next/link";\n\n` : ""}import { NotAllowed } from "@/components/not-allowed";
+import { ${name}Table } from "@/components/${slug}-table";
+import { getActiveRole } from "@/lib/current-role";
 import { prisma } from "@/lib/prisma";
+import { can } from "@/lib/roles";
 
 // Always read fresh data from the database.
 export const dynamic = "force-dynamic";
 
 /** List page for ${modelConfig.label.toLowerCase()}. */
 export default async function ${name}ListPage() {
+  // PERMISSION CHECK: the role needs "view" on ${name} to see this page.
+  const role = await getActiveRole();
+  if (!can(role, "${name}", "view")) return <NotAllowed />;
+
   const rows = await prisma.${delegateName(name)}.findMany(${idField ? `{ orderBy: { ${idField}: "asc" } }` : ""});
 ${flags.length > 0 ? `\n  ${flags.join("\n  ")}\n` : ""}
   return (

@@ -24,11 +24,11 @@
   - [x] 4.5 Packager (ZIP)
   - _Requirements: 4_
 
-- [ ] 5. Roles and permissions
-  - [ ] 5.1 `lib/roles.ts` and `can()` helper templates
-  - [ ] 5.2 Role switcher component template
-  - [ ] 5.3 Permission checks in UI and server actions
-  - [ ] 5.4 Tests: restricted role cannot perform blocked actions
+- [x] 5. Roles and permissions
+  - [x] 5.1 `lib/roles.ts` and `can()` helper templates
+  - [x] 5.2 Role switcher component template
+  - [x] 5.3 Permission checks in UI and server actions
+  - [x] 5.4 Tests: restricted role cannot perform blocked actions
   - _Requirements: 3_
 
 - [ ] 6. Kiro output generation

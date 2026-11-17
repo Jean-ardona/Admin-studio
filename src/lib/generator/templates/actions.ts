@@ -60,7 +60,7 @@ const fieldMapping = (field: ResolvedFormField): { read: string; property: strin
  * delete with Prisma. Each action only exists when the page that uses it is
  * enabled (create -> create page, update -> edit page, delete -> detail page).
  *
- * Every action starts with a marked spot for the permission check.
+ * Every action starts with a permission check using the active role (cookie).
  */
 export const actionsTemplate = (
   config: StudioConfig,
@@ -82,8 +82,13 @@ export const actionsTemplate = (
   const enumTypes = [...new Set(fields.filter((f) => f.enumValues).map((f) => f.type))];
   const mappings = fields.map(fieldMapping);
 
+  // Server-side permission check: runs before anything touches the database.
   const permission = (action: string) =>
-    `  // PERMISSION CHECK: add \`can(role, "${name}", "${action}")\` here once roles are set up (lib/roles.ts).`;
+    `  // PERMISSION CHECK: reject the call when the active role may not ${action} ${name} (lib/roles.ts).
+  const role = await getActiveRole();
+  if (!can(role, "${name}", "${action}")) {
+    throw new Error("Not allowed: the current role cannot ${action} ${name}.");
+  }`;
 
   const parts: string[] = [];
 
@@ -93,7 +98,9 @@ export const actionsTemplate = (
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 ${enumTypes.length > 0 ? `import type { ${enumTypes.join(", ")} } from "@prisma/client";\n` : ""}
+import { getActiveRole } from "@/lib/current-role";
 import { prisma } from "@/lib/prisma";
+import { can } from "@/lib/roles";
 
 /** Reads a text input. Empty inputs become null. */
 function text(formData: FormData, name: string): string | null {

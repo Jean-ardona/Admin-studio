@@ -150,10 +150,19 @@ export const createPageTemplate = (
 
   return `import { create${name} } from "@/app/${slug}/actions";
 import { ${name}Form } from "@/components/${slug}-form";
+import { NotAllowed } from "@/components/not-allowed";
+import { getActiveRole } from "@/lib/current-role";
+import { can } from "@/lib/roles";
+
+// Always evaluate the active role on each request.
+export const dynamic = "force-dynamic";
 
 /** Page with an empty form to create a new record. */
-export default function Create${name}Page() {
-  // PERMISSION CHECK: redirect or show "Not allowed" here when role cannot create ${name}.
+export default async function Create${name}Page() {
+  // PERMISSION CHECK: the role needs "create" on ${name}. The server action checks again.
+  const role = await getActiveRole();
+  if (!can(role, "${name}", "create")) return <NotAllowed />;
+
   return (
     <section className="space-y-6">
       <h1 className="text-2xl font-semibold tracking-tight">New ${singular(modelConfig.label)}</h1>
@@ -177,13 +186,19 @@ export const editPageTemplate = (
 
 import { update${name} } from "@/app/${slug}/actions";
 import { ${name}Form } from "@/components/${slug}-form";
+import { NotAllowed } from "@/components/not-allowed";
+import { getActiveRole } from "@/lib/current-role";
 import { prisma } from "@/lib/prisma";
+import { can } from "@/lib/roles";
 
 export const dynamic = "force-dynamic";
 
 /** Page with the form prefilled from the record in the URL. */
 export default async function Edit${name}Page({ params }: { params: Promise<{ id: string }> }) {
-  // PERMISSION CHECK: redirect or show "Not allowed" here when role cannot edit ${name}.
+  // PERMISSION CHECK: the role needs "edit" on ${name}. The server action checks again.
+  const role = await getActiveRole();
+  if (!can(role, "${name}", "edit")) return <NotAllowed />;
+
   const { id } = await params;
   const record = await prisma.${delegateName(name)}.findUnique({
     where: { ${idField.name}: ${idParseExpression(idField.type, "id")} },
@@ -222,8 +237,11 @@ import { notFound } from "next/navigation";
 import type { ${name} } from "@prisma/client";
 
 import { delete${name} } from "@/app/${slug}/actions";
+import { NotAllowed } from "@/components/not-allowed";
+import { getActiveRole } from "@/lib/current-role";
 import { formatCell } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
+import { can } from "@/lib/roles";
 
 export const dynamic = "force-dynamic";
 
@@ -234,6 +252,11 @@ ${columnList}
 
 /** Read-only view of one record. */
 export default async function ${name}DetailPage({ params }: { params: Promise<{ id: string }> }) {
+  // PERMISSION CHECK: the role needs "view" on ${name}. Buttons below depend on edit and delete.
+  const role = await getActiveRole();
+  if (!can(role, "${name}", "view")) return <NotAllowed />;
+${hasEdit ? `  const canEdit = can(role, "${name}", "edit");\n` : ""}  const canDelete = can(role, "${name}", "delete");
+
   const { id } = await params;
   const record = await prisma.${delegateName(name)}.findUnique({
     where: { ${idField.name}: ${idParseExpression(idField.type, "id")} },
@@ -250,18 +273,22 @@ export default async function ${name}DetailPage({ params }: { params: Promise<{ 
           </Link>${
     hasEdit
       ? `
-          {/* PERMISSION CHECK: show only when role can edit ${name}. */}
-          <Link href={\`/${slug}/\${id}/edit\`} className="text-sm text-accent-bright hover:underline">
-            Edit
-          </Link>`
+          {/* Shown only when the role can edit ${name}. */}
+          {canEdit && (
+            <Link href={\`/${slug}/\${id}/edit\`} className="text-sm text-accent-bright hover:underline">
+              Edit
+            </Link>
+          )}`
       : ""
   }
-          {/* PERMISSION CHECK: show only when role can delete ${name}. */}
-          <form action={delete${name}.bind(null, id)}>
-            <button type="submit" className="text-sm text-red-400 hover:underline">
-              Delete
-            </button>
-          </form>
+          {/* Shown only when the role can delete ${name}. */}
+          {canDelete && (
+            <form action={delete${name}.bind(null, id)}>
+              <button type="submit" className="text-sm text-red-400 hover:underline">
+                Delete
+              </button>
+            </form>
+          )}
         </div>
       </div>
       <dl className="grid max-w-xl gap-4 rounded-2xl border border-border bg-surface p-6 sm:grid-cols-2">

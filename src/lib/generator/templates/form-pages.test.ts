@@ -106,14 +106,39 @@ describe("create, edit and detail templates", () => {
     expect(actions).toContain("where: { id: Number(id) }");
   });
 
-  it("parses string ids without conversion and leaves permission spots", () => {
+  it("parses string ids without conversion and checks permissions in every action", () => {
     const files = generateProject(build());
     const actions = file(files, "app/author/actions.ts");
 
     expect(actions).toContain("where: { id: id }");
     expect(actions.match(/PERMISSION CHECK/g)?.length).toBe(3);
-    expect(actions).toContain('can(role, "Author", "delete")');
-    expect(file(files, "app/author/[id]/page.tsx")).toContain("PERMISSION CHECK");
+    expect(actions).toContain("await getActiveRole()");
+    for (const action of ["create", "edit", "delete"]) {
+      expect(actions).toContain(`if (!can(role, "Author", "${action}"))`);
+    }
+    // The check must run before the database call.
+    expect(actions.indexOf('can(role, "Author", "delete")')).toBeLessThan(actions.indexOf("prisma.author.delete"));
+  });
+
+  it("guards pages and hides detail buttons by permission", () => {
+    const files = generateProject(build());
+    const detail = file(files, "app/author/[id]/page.tsx");
+
+    expect(detail).toContain('can(role, "Author", "view")');
+    expect(detail).toContain("{canEdit && (");
+    expect(detail).toContain("{canDelete && (");
+    expect(file(files, "app/author/new/page.tsx")).toContain('can(role, "Author", "create")');
+    expect(file(files, "app/author/[id]/edit/page.tsx")).toContain('can(role, "Author", "edit")');
+  });
+
+  it("filters the sidebar by the role menu and view permission", () => {
+    const files = generateProject(build());
+
+    expect(file(files, "lib/current-role.ts")).toContain('can(roleName, item.model, "view")');
+    expect(file(files, "lib/current-role.ts")).toContain("menu.includes(item.model)");
+    expect(file(files, "app/layout.tsx")).toContain("getVisibleNavItems()");
+    expect(file(files, "components/sidebar.tsx")).toContain("items.map");
+    expect(file(files, "components/not-allowed.tsx")).toContain("Not allowed");
   });
 
   it("uses the configured columns on the detail page and adds the formatter when no list exists", () => {
