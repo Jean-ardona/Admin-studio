@@ -1,5 +1,6 @@
 import type { StudioConfig } from "@/lib/studio-config";
 
+import { generateKiro } from "../kiro";
 import { generateSkeleton } from "./skeleton";
 import { formPageFiles } from "./templates/form-pages";
 import { listPageFiles } from "./templates/list-page";
@@ -42,4 +43,5 @@ export const generateProject = (config: StudioConfig): GeneratedFile[] => [
   { path: "components/role-switcher.tsx", content: roleSwitcherTemplate() },
   ...listPageFiles(config),
   ...formPageFiles(config),
+  ...generateKiro(config),
 ];

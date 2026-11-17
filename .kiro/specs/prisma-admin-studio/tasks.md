@@ -31,9 +31,9 @@
   - [x] 5.4 Tests: restricted role cannot perform blocked actions
   - _Requirements: 3_
 
-- [ ] 6. Kiro output generation
-  - [ ] 6.1 Steering generator from real config
-  - [ ] 6.2 Skills: add-model, add-field, add-role, edit-page-layout
+- [x] 6. Kiro output generation
+  - [x] 6.1 Steering generator from real config
+  - [x] 6.2 Skills: add-model, add-field, add-role, edit-page-layout
   - _Requirements: 5_
 
 - [ ] 7. Studio UI
