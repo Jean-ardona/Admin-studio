@@ -11,9 +11,9 @@
   - [x] 2.3 Unit tests with valid and invalid fixtures
   - _Requirements: 1_
 
-- [ ] 3. Studio state and config
-  - [ ] 3.1 Define `StudioConfig` types and a Zustand store
-  - [ ] 3.2 Build default config from a parsed schema (all models, sensible columns and form inputs)
+- [x] 3. Studio state and config
+  - [x] 3.1 Define `StudioConfig` types and a Zustand store
+  - [x] 3.2 Build default config from a parsed schema (all models, sensible columns and form inputs)
   - _Requirements: 2_
 
 - [ ] 4. Generator core
